@@ -2,396 +2,546 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1e3a8a">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Siurot Gestión Alumnado</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/AppAlumnado.png" type="image/png">
     
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/AppAlumnado.png">
-    
-    <!-- Fuentes elegantes y legibles (Inspirado en Claude) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Librerías Oficiales Firebase Compat (v10) -->
+    <!-- Firebase Compat SDK (Versión 10+) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
     <style>
-        /* Paleta de colores institucional, limpia y contrastada (Inspirado en Gemini) */
         :root {
-            --bg-principal: #f4f6f9;
-            --bg-tarjeta: #ffffff;
-            --texto-principal: #1e293b;
-            --texto-secundario: #64748b;
-            --azul-institucional: #1e3a8a;
-            --azul-hover: #1d4ed8;
-            --borde-tarjeta: #e2e8f0;
-            --rojo-critico: #dc2626;
-            --rojo-suave: #fee2e2;
-            --rojo-texto: #991b1b;
-            --rojo-borde: #fca5a5;
-            --amarillo-moderado: #d97706;
-            --amarillo-suave: #fef3c7;
-            --amarillo-texto: #92400e;
-            --amarillo-borde: #fde68a;
-            --verde-activo: #22c55e;
-            --gris-inactivo: #94a3b8;
+            --bg-main: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --blue-corp: #1e3a8a;
+            --blue-light: #3b82f6;
+            --red-sos: #dc2626;
+            --red-dark: #b91c1c;
+            --border-color: #e2e8f0;
         }
 
-        .dark-mode {
-            --bg-principal: #0f172a;
-            --bg-tarjeta: #1e293b;
-            --texto-principal: #f8fafc;
-            --texto-secundario: #94a3b8;
-            --azul-institucional: #3b82f6;
-            --azul-hover: #60a5fa;
-            --borde-tarjeta: #334155;
-            --rojo-suave: #451a03;
-            --rojo-texto: #fca5a5;
-            --rojo-borde: #7f1d1d;
-            --amarillo-suave: #451a03;
-            --amarillo-texto: #fde68a;
-            --amarillo-borde: #78350f;
+        body.dark-mode {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --blue-corp: #60a5fa;
+            --blue-light: #93c5fd;
+            --border-color: #334155;
         }
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'DM Sans', sans-serif; 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             -webkit-tap-highlight-color: transparent;
-            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        body { 
-            background-color: var(--bg-principal); 
-            color: var(--texto-principal); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh; 
-            padding: 15px; 
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            padding-bottom: 20px;
         }
 
-        /* Contenedor optimizado ergonómicamente para móviles (Inspirado en Kimi) */
-        .container { 
-            width: 100%; 
-            max-width: 440px; 
-            background: var(--bg-tarjeta); 
-            padding: 24px; 
-            border-radius: 16px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
-            margin-top: 10px; 
-            text-align: center; 
-        }
-
-        /* Sistema SPA (Single Page Application) */
-        .pantalla { display: none; width: 100%; max-width: 440px; }
-        #pantalla-login { display: block; }
-
-        /* Elementos del Login */
-        .logo-colegio { width: 120px; height: auto; margin-bottom: 15px; }
-        h1 { color: var(--azul-institucional); font-size: 24px; margin-bottom: 8px; font-weight: 700; }
-        .subtitle { color: var(--texto-secundario); font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
-        
-        /* Botones grandes y fáciles de pulsar sobre la marcha (Inspirado en Kimi) */
-        .btn-universal {
+        .screen {
+            display: none;
             width: 100%;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Pantalla de Carga / Bloqueo */
+        #lock-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #lock-screen.active {
             display: flex;
+        }
+
+        /* Portada */
+        #screen-login {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+            text-align: center;
+        }
+
+        .logo-img {
+            width: 140px;
+            height: 140px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            object-fit: cover;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 10px; color: var(--blue-corp); }
+        h2 { font-size: 1.2rem; color: var(--text-muted); font-weight: 400; margin-bottom: 40px; padding: 0 20px; }
+
+        /* Botones Generales */
+        .btn {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        .btn-login { background-color: #2563eb; color: white; }
-        .btn-login:hover { background-color: #1d4ed8; }
+        .btn:active { transform: scale(0.98); }
 
-        /* Cabecera de menús */
-        .menu-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 1px solid var(--borde-tarjeta); 
-            padding-bottom: 12px; 
-            margin-bottom: 20px; 
-        }
-        .user-info { display: flex; align-items: center; gap: 8px; }
-        .user-name { font-size: 14px; font-weight: 600; color: var(--texto-principal); }
-        .btn-tuerca { background: none; border: none; cursor: pointer; font-size: 20px; display: none; }
-        
-        .btn-logout { 
-            background: var(--rojo-suave); 
-            color: var(--rojo-critico); 
-            border: 1px solid var(--rojo-borde); 
-            padding: 6px 12px; 
-            border-radius: 6px; 
-            font-size: 12px; 
-            font-weight: bold; 
-            cursor: pointer; 
+        .btn-google {
+            background-color: var(--blue-corp);
+            color: white;
         }
 
-        /* Botón S.O.S Extragrande y Animado para Emergencias Reales (Inspirado en Kimi) */
-        .btn-urgente { 
-            width: 100%; 
-            background: linear-gradient(135deg, #dc2626, #b91c1c); 
-            color: white; 
-            border: 1px solid #fca5a5; 
-            padding: 20px; 
-            border-radius: 14px; 
-            font-size: 17px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 12px; 
-            margin-bottom: 25px; 
-            animation: pulsacion-suave 2s infinite;
-        }
-        @keyframes pulsacion-suave {
-            0% { transform: scale(1); box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3); }
-            50% { transform: scale(1.02); box-shadow: 0 6px 24px rgba(220, 38, 38, 0.45); }
-            100% { transform: scale(1); box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3); }
+        .btn-sos {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            font-size: 1.5rem;
+            padding: 30px 20px;
+            border: 2px solid #fecaca;
+            box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3);
+            margin: 30px 0;
         }
 
-        .btn-seccion { 
-            background-color: var(--azul-institucional); 
-            color: white; 
-            margin-bottom: 12px; 
-            text-align: left; 
+        .btn-menu {
+            background-color: var(--blue-corp);
+            color: white;
+            margin-bottom: 15px;
+            text-align: left;
             justify-content: flex-start;
         }
-        .btn-seccion:hover { background-color: var(--azul-hover); }
 
-        /* Módulo de Urgencia y Tarjetas de Alumnos (Inspirado en Gemini) */
-        .header-urgente { 
-            background-color: var(--rojo-suave); 
-            border: 1px solid var(--rojo-borde); 
-            padding: 12px; 
-            border-radius: 8px; 
-            color: var(--rojo-texto); 
-            font-weight: 700; 
-            font-size: 14px; 
-            margin-bottom: 15px; 
+        .btn-back {
+            background-color: #64748b;
+            color: white;
+            margin-top: 30px;
         }
-        .buscador-medico { 
-            width: 100%; 
-            padding: 14px; 
-            margin-bottom: 15px; 
-            border: 2px solid var(--azul-institucional); 
-            border-radius: 10px; 
-            font-size: 15px; 
-            background: var(--bg-tarjeta);
-            color: var(--texto-principal);
-            outline: none;
-        }
-        
-        .tarjeta-alumno { 
-            background: var(--bg-tarjeta); 
-            border-left: 6px solid var(--rojo-critico); 
-            border-top: 1px solid var(--borde-tarjeta); 
-            border-right: 1px solid var(--borde-tarjeta); 
-            border-bottom: 1px solid var(--borde-tarjeta); 
-            border-radius: 0 12px 12px 0; 
-            padding: 16px; 
-            margin-bottom: 15px; 
-            text-align: left; 
-        }
-        .tarjeta-alumno.moderado { border-left-color: var(--amarillo-moderado); }
-        
-        .alumno-nombre { font-size: 18px; font-weight: 700; color: var(--azul-institucional); display: flex; justify-content: space-between; align-items: center; }
-        
-        .badge { font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 700; color: white; text-transform: uppercase; }
-        .badge.critico { background-color: var(--rojo-critico); }
-        .badge.moderado { background-color: var(--amarillo-moderado); }
-        
-        .alumno-curso { font-size: 13px; color: var(--texto-secundario); margin-bottom: 12px; font-weight: 500; }
-        
-        .alumno-patologia { 
-            font-size: 14px; 
-            background-color: var(--bg-principal); 
-            border: 1px dashed var(--texto-secundario); 
-            padding: 10px; 
-            border-radius: 6px; 
-            margin-bottom: 12px; 
-            color: var(--texto-principal); 
-            font-weight: 500;
-        }
-        
-        .alumno-protocolo { font-size: 13.5px; color: var(--texto-principal); line-height: 1.5; }
-        .protocolo-titulo { font-weight: 700; color: var(--rojo-critico); font-size: 12px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .tarjeta-alumno.moderado .protocolo-titulo { color: var(--amarillo-moderado); }
-        
-        .btn-volver { background-color: #64748b; color: white; margin-top: 15px; }
 
-        /* Panel de Administración Interno (Inspirado en GLM y Gemini) */
-        .admin-subtitulo { font-size: 14px; font-weight: 700; color: var(--rojo-critico); margin-bottom: 15px; text-align: left; border-bottom: 2px dashed var(--borde-tarjeta); padding-bottom: 5px; text-transform: uppercase; }
-        .box-gestion { background: var(--bg-principal); border: 1px solid var(--borde-tarjeta); padding: 14px; border-radius: 10px; margin-bottom: 15px; text-align: left; }
-        .box-label { font-size: 11px; color: var(--azul-institucional); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px; }
-        .flex-row { display: flex; gap: 6px; }
-        
-        .input-text { padding: 10px; font-size: 14px; flex: 1; border: 1px solid var(--gris-inactivo); border-radius: 6px; background: var(--bg-tarjeta); color: var(--texto-principal); outline: none; }
-        .btn-accion-form { background: var(--azul-institucional); color: white; border: none; padding: 0 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
-        
-        .lista-scroll { background: var(--bg-tarjeta); border: 1px solid var(--borde-tarjeta); height: 160px; overflow-y: auto; border-radius: 8px; padding: 8px; margin-top: 8px; }
-        .fila-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-principal); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--borde-tarjeta); margin-bottom: 6px; font-size: 13px; }
-        
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-        .status-dot.activo { background-color: var(--verde-activo); }
-        .status-dot.inactivo { background-color: var(--gris-inactivo); }
-        
-        .btn-tabla { border: 1px solid var(--borde-tarjeta); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 4px; }
-        .btn-tabla.baja { background: var(--rojo-suave); color: var(--rojo-critico); border-color: var(--rojo-borde); }
-        .btn-tabla.rol { background: var(--bg-tarjeta); color: var(--texto-principal); }
-        .btn-tabla.edit { background: var(--amarillo-suave); color: var(--amarillo-texto); border-color: var(--amarillo-borde); }
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            width: auto;
+            border-radius: 8px;
+        }
 
-        .form-grid { display: flex; flex-direction: column; gap: 10px; }
-        .form-grid select, .form-grid textarea { width: 100%; padding: 10px; font-size: 14px; border: 1px solid var(--gris-inactivo); border-radius: 6px; background: var(--bg-tarjeta); color: var(--texto-principal); outline: none; }
-        .form-grid textarea { resize: vertical; height: 70px; }
+        .btn-danger { background-color: #ef4444; color: white; }
+        .btn-success { background-color: #10b981; color: white; }
+        .btn-secondary { background-color: #64748b; color: white; }
 
-        /* Pantalla de Bloqueo por Inactividad (Inspirado en Claude) */
-        #pantalla-bloqueo { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; right: 0; bottom: 0; 
-            background: rgba(15, 23, 42, 0.97); 
-            z-index: 9999; 
-            color: white; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            padding: 30px; 
+        /* Cabecera Menú */
+        .header-menu {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .btn-logout {
+            background-color: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .dark-mode .btn-logout {
+            background-color: #450a0a;
+            border-color: #7f1d1d;
+        }
+
+        .btn-admin {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        /* Módulo SOS */
+        .sos-header {
+            background-color: #fee2e2;
+            border: 2px solid #fca5a5;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 12px;
             text-align: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
         }
-        .icono-candado { font-size: 56px; margin-bottom: 20px; animation: latido 2.5s infinite; }
-        @keyframes latido {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
+
+        .dark-mode .sos-header {
+            background-color: #450a0a;
+            border-color: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2rem;
+            border: 2px solid var(--blue-corp);
+            border-radius: 12px;
+            margin-bottom: 25px;
+            outline: none;
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .card-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .medical-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border-left: 6px solid #64748b;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .medical-card.critico { border-left-color: #dc2626; }
+        .medical-card.moderado { border-left-color: #d97706; }
+
+        .badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .badge-critico { background-color: #dc2626; color: white; }
+        .badge-moderado { background-color: #d97706; color: white; }
+
+        .card-name { font-size: 1.4rem; font-weight: 700; color: var(--blue-corp); margin-bottom: 5px; padding-right: 100px; }
+        .card-course { color: var(--text-muted); margin-bottom: 15px; font-size: 0.95rem; }
+
+        .condition-box {
+            background: var(--bg-main);
+            border: 2px dashed var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .condition-title { font-weight: 700; color: var(--text-main); margin-bottom: 5px; }
+        .condition-text { color: var(--text-muted); }
+
+        .protocol-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .dark-mode .protocol-box {
+            background: #422006;
+            border-color: #78350f;
+        }
+
+        .protocol-title {
+            font-weight: 800;
+            color: #b91c1c;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .protocol-text { color: var(--text-main); line-height: 1.6; }
+
+        /* Panel Jefatura */
+        .admin-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .admin-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--blue-corp);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .scroll-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-main);
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-card);
+        }
+
+        .list-item:last-child { border-bottom: none; }
+
+        .list-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .list-email { font-weight: 600; color: var(--text-main); }
+        .list-role { font-size: 0.85rem; color: var(--text-muted); }
+        
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .dot-green { background-color: #10b981; }
+        .dot-gray { background-color: #94a3b8; }
+
+        .list-actions { display: flex; gap: 8px; }
+
+        @media (max-width: 600px) {
+            .list-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .list-actions { width: 100%; }
+            .list-actions .btn-small { flex: 1; }
         }
     </style>
 </head>
 <body>
 
-    <!-- RECURSO AUDIO MULTIMEDIA -->
-    <audio id="audio-tap" src="https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Tap.mp3" preload="auto"></audio>
-
-    <!-- PANTALLA 1: PORTADA Y ACCESO -->
-    <div id="pantalla-login" class="container pantalla">
-        <img src="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/icono.png" alt="Logo Colegio Siurot" class="logo-colegio">
-        <h1>Siurot Gestión Alumnado</h1>
-        <p class="subtitle">Acceso exclusivo para personal docente autorizado mediante su cuenta corporativa</p>
-        <button onclick="iniciarSesionGoogle()" class="btn-universal btn-login">🔑 Identificarse con Google</button>
+    <!-- PANTALLA DE BLOQUEO (5 Minutos) -->
+    <div id="lock-screen">
+        <h2 style="font-size: 2rem; margin-bottom: 20px;">🔒 Pantalla Bloqueada</h2>
+        <p style="margin-bottom: 30px; color: #94a3b8;">Por seguridad, confirma tu identidad para continuar.</p>
+        <button class="btn btn-google" onclick="reauthenticateUser()">Identificarse de nuevo</button>
     </div>
 
-    <!-- PANTALLA 2: MENÚ PRINCIPAL INTERNO -->
-    <div id="pantalla-menu" class="container pantalla">
-        <div class="menu-header">
+    <!-- PANTALLA 1: PORTADA Y LOGUEO -->
+    <div id="screen-login" class="screen active">
+        <img src="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/icono.png" alt="Logo CEIP Alfonso VI" class="logo-img">
+        <h1>Siurot Gestión Alumnado</h1>
+        <h2>Identificación obligatoria con tu Huella / PIN mediante tu cuenta de la Junta</h2>
+        <button class="btn btn-google" id="btn-login" onclick="loginWithGoogle()">🔑 Identificarse con Google</button>
+    </div>
+
+    <!-- PANTALLA 2: MENÚ PRINCIPAL -->
+    <div id="screen-menu" class="screen">
+        <div class="header-menu">
             <div class="user-info">
-                <span class="user-name" id="display-user-name">Verificando...</span>
-                <button id="btn-tuerca" class="btn-tuerca" onclick="irAPantalla('pantalla-jefatura')">⚙️</button>
+                <button id="btn-admin-panel" class="btn-admin" style="display: none;" onclick="navigateTo('screen-admin')">⚙️</button>
+                <span id="user-name">Docente</span>
             </div>
-            <button class="btn-logout" onclick="ejecutarCerrarSesion()">Salir</button>
+            <button class="btn-logout" onclick="logout()">Salir</button>
         </div>
 
-        <!-- Botón de emergencia con ergonomía móvil de Kimi -->
-        <button class="btn-urgente" onclick="abrirModuloUrgencia()">
-            🚨 CONSULTA MÉDICA URGENTE
-        </button>
+        <button class="btn btn-sos" onclick="navigateTo('screen-sos')">🚨 CONSULTA MÉDICA URGENTE</button>
 
-        <div style="font-size: 11px; font-weight: 700; color: var(--texto-secundario); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left;">Secciones de Consulta</div>
-        <button class="btn-universal btn-seccion" onclick="alert('Sección en desarrollo: Próximamente consulta general por Tutorías')">📂 Listado por Cursos / Tutorías</button>
-        <button class="btn-universal btn-seccion" onclick="alert('Sección en desarrollo: Próximamente control de Comedor Escolar')">🍏 Alergias de Comedor Escolar</button>
-        <button class="btn-universal btn-seccion" style="background-color: #475569;" onclick="alternarModoVisual()">🌓 Cambiar Modo Visual (Claro/Oscuro)</button>
+        <button class="btn btn-menu" onclick="playTap(); alert('Módulo en desarrollo para el siguiente ciclo escolar.');">📂 Listado por Cursos / Tutorías</button>
+        <button class="btn btn-menu" onclick="playTap(); alert('Módulo en desarrollo para el siguiente ciclo escolar.');">🍏 Alergias de Comedor Escolar</button>
+        <button class="btn btn-menu" onclick="toggleDarkMode()">🌓 Cambiar Modo Visual (Claro/Oscuro)</button>
     </div>
 
     <!-- PANTALLA 3: MÓDULO MÉDICO S.O.S. -->
-    <div id="pantalla-medica" class="container pantalla">
-        <div class="header-urgente">⚠️ DATOS DE RIESGO MÉDICO ESCOLAR</div>
-        <input type="text" id="buscador" class="buscador-medico" placeholder="🔍 Buscar alumno o curso (ej: 3º)..." onkeyup="filtrarAlumnosReactivo()">
+    <div id="screen-sos" class="screen">
+        <div class="sos-header">⚠️ DATOS DE RIESGO MÉDICO ESCOLAR</div>
         
-        <!-- Contenedor dinámico en tiempo real -->
-        <div id="lista-alumnos-sos"></div>
+        <input type="text" class="search-box" id="search-sos" placeholder="🔍 Buscar alumno o curso (ej: 3º)..." onkeyup="filterMedicalCards()">
         
-        <button class="btn-universal btn-volver" onclick="irAPantalla('pantalla-menu')">⬅️ Volver al Menú Principal</button>
+        <div class="card-container" id="medical-cards-container">
+            <!-- Las tarjetas se inyectan dinámicamente desde Firestore o Ejemplos -->
+        </div>
+
+        <button class="btn btn-back" onclick="navigateTo('screen-menu')">⬅️ Volver al Menú Principal</button>
     </div>
 
     <!-- PANTALLA 4: PANEL DE JEFATURA -->
-    <div id="pantalla-jefatura" class="container pantalla">
-        <div class="menu-header">
-            <h2 style="font-size: 16px; color: var(--azul-institucional);">Panel de Jefatura</h2>
-            <button class="btn-logout" style="background:#64748b; color:white; border-color:#475569;" onclick="irAPantalla('pantalla-menu')">Volver</button>
-        </div>
+    <div id="screen-admin" class="screen">
+        <h1 style="margin-bottom: 20px;">🔒 Control de Altas/Bajas (Jefatura)</h1>
 
-        <!-- CONTROL DE CLAUSTRO -->
-        <div class="admin-subtitulo">🔒 Control de Accesos (Docentes)</div>
-        <div class="box-gestion">
-            <span class="box-label">Alta Manual de Maestro:</span>
-            <div class="flex-row">
-                <input type="email" id="inp-maestro-email" class="input-text" placeholder="maestro@g.educaand.es">
-                <button class="btn-accion-form" onclick="registrarMaestroManual()">Alta</button>
-            </div>
-            <div id="box-lista-maestros" class="lista-scroll"></div>
-        </div>
-
-        <!-- GESTIÓN DE ALUMNADO -->
-        <div class="admin-subtitulo">👥 Gestión del Censo de Alumnos</div>
-        <div class="box-gestion">
-            <span class="box-label" id="formulario-alumno-titulo">Añadir / Editar Ficha Quirúrgica:</span>
-            <input type="hidden" id="form-alumno-id">
-            <div class="form-grid" style="margin-top:5px;">
-                <input type="text" id="form-alumno-nombre" class="input-text" placeholder="Nombre">
-                <input type="text" id="form-alumno-apellidos" class="input-text" placeholder="Apellidos">
-                <select id="form-alumno-curso">
-                    <option value="1º de Primaria">1º de Primaria</option>
-                    <option value="2º de Primaria">2º de Primaria</option>
-                    <option value="3º de Primaria">3º de Primaria</option>
-                    <option value="4º de Primaria">4º de Primaria</option>
-                    <option value="5º de Primaria">5º de Primaria</option>
-                    <option value="6º de Primaria">6º de Primaria</option>
-                </select>
-                <input type="text" id="form-alumno-tutor" class="input-text" placeholder="Maestro Tutor">
-                <textarea id="form-alumno-patologia" placeholder="Condición médica / Patología"></textarea>
-                <textarea id="form-alumno-protocolo" placeholder="Protocolo de Actuación Paso a Paso"></textarea>
-                <select id="form-alumno-riesgo">
-                    <option value="Crítico">🔴 Riesgo Crítico</option>
-                    <option value="Moderado">🟡 Riesgo Moderado</option>
-                </select>
-                <button class="btn-universal btn-login" style="padding:10px; font-size:13px;" onclick="guardarFichaAlumnoIndividual()">Guardar en Firestore</button>
-                <button id="btn-cancelar-edicion" class="btn-tabla" style="display:none; background:#e2e8f0; margin-top:5px; padding:6px;" onclick="limpiarFormularioAlumnado()">Cancelar Edición</button>
+        <!-- Gestión Claustro -->
+        <div class="admin-section">
+            <div class="admin-title">👥 Gestión del Claustro (Accesos)</div>
+            
+            <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
+                <div style="flex-grow: 1;">
+                    <label>Alta Manual Docente</label>
+                    <input type="email" id="input-teacher-email" class="form-input" placeholder="maestro@g.educaand.es">
+                </div>
+                <button class="btn btn-success btn-small" onclick="addTeacher()">Alta</button>
             </div>
             
-            <div id="box-lista-alumnos-admin" class="lista-scroll"></div>
+            <div style="margin-top: 20px;">
+                <label>Lista de Personal Autorizado</label>
+                <div class="scroll-list" id="teacher-list-container">
+                    <!-- Lista dinámica -->
+                </div>
+            </div>
         </div>
 
-        <!-- Inyector automático de datos iniciales (Inspirado en el Seeding inteligente de GLM/Claude) -->
-        <div class="box-gestion" style="background: var(--rojo-suave); border-color: var(--rojo-borde);">
-            <span class="box-label" style="color: var(--rojo-texto);">Herramientas de Inicialización:</span>
-            <button class="btn-universal" style="background: var(--rojo-critico); color:white; font-size:12px; padding:8px;" onclick="inyectarDatosDemoOpcionales()">⚙️ Forzar Datos de Prueba (Alejandro, Martín, Lucía)</button>
+        <!-- Gestión Alumnado -->
+        <div class="admin-section">
+            <div class="admin-title">🩺 Gestión Alumnado de Riesgo</div>
+            
+            <form id="student-form" onsubmit="saveStudent(event)">
+                <input type="hidden" id="student-id" value="">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="student-nombre" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Apellidos</label>
+                    <input type="text" id="student-apellidos" class="form-input" required>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Curso</label>
+                        <select id="student-curso" class="form-select" required>
+                            <option value="1º de Primaria">1º de Primaria</option>
+                            <option value="2º de Primaria">2º de Primaria</option>
+                            <option value="3º de Primaria" selected>3º de Primaria</option>
+                            <option value="4º de Primaria">4º de Primaria</option>
+                            <option value="5º de Primaria">5º de Primaria</option>
+                            <option value="6º de Primaria">6º de Primaria</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Nivel de Riesgo</label>
+                        <select id="student-riesgo" class="form-select" required>
+                            <option value="Critico">🔴 Crítico</option>
+                            <option value="Moderado">🟡 Moderado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Maestro/a Tutor/a</label>
+                    <input type="text" id="student-tutor" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Condición / Patología</label>
+                    <textarea id="student-patologia" class="form-textarea" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Protocolo de Actuación</label>
+                    <textarea id="student-protocolo" class="form-textarea" style="min-height: 120px;" required></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-success" style="flex: 1;" id="btn-save-student">Guardar Alumno</button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1; display: none;" id="btn-cancel-edit" onclick="cancelEditStudent()">Cancelar Edición</button>
+                </div>
+            </form>
+
+            <div style="margin-top: 30px;">
+                <label>Censo de Alumnado Médico</label>
+                <div class="card-container" id="admin-students-container">
+                    <!-- Tarjetas de administración dinámicas -->
+                </div>
+            </div>
         </div>
+
+        <button class="btn btn-back" onclick="navigateTo('screen-menu')">⬅️ Volver al Menú</button>
     </div>
 
-    <!-- PANTALLA DE BLOQUEO DE PRIVACIDAD (Inspirado en la robustez de Claude) -->
-    <div id="pantalla-bloqueo">
-        <div class="icono-candado">🔒</div>
-        <h2>Aplicación Bloqueada por Seguridad</h2>
-        <p style="margin: 10px 0 25px 0; font-size:14px; opacity:0.8; max-width:300px;">Se ha detectado una inactividad prolongada en segundo plano. Verifique su cuenta para garantizar la protección de datos médicos.</p>
-        <button class="btn-universal btn-login" onclick="desbloquearPorBiometria()">🔓 Desbloquear con mi Huella / PIN</button>
-    </div>
-
-    <!-- LOGICA DEL MOTOR UNIFICADO -->
+    <!-- Lógica JavaScript -->
     <script>
-        // CONFIGURACIÓN OFICIAL FIREBASE NATIVA
+        // ==========================================
+        // CONFIGURACIÓN FIREBASE E INICIALIZACIÓN
+        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCX8j2ycnULIfgQV_DDv__H8jaZgP3GcV0",
             authDomain: "siurotalumnado.firebaseapp.com",
@@ -405,358 +555,496 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // ADMINISTRADOR FUNDADOR PERMANENTE
-        const FUNDADOR_CORREO = "mvensan855@g.educaand.es";
+        // Persistencia Local (Para no pedir login constantemente durante la jornada)
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-        // GESTIÓN ROBUSTA DE TIEMPOS EN SEGUNDO PLANO (Control estricto de Claude)
-        let tiempoSalidaSegundoPlano = null;
-        const LIMITE_INACTIVIDAD_MS = 5 * 60 * 1000; // 5 minutos exactos
+        // ==========================================
+        // RECURSOS MULTIMEDIA Y SONIDO
+        // ==========================================
+        const tapSound = new Audio('https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/refs/heads/main/Tap.mp3');
+        
+        function playTap() {
+            tapSound.currentTime = 0;
+            tapSound.play().catch(e => console.log("Audio bloqueado por navegador hasta interacción directa."));
+        }
 
-        // INTERCEPTOR DE AUDIO GLOBAL (Propuesto por Manuel)
-        document.addEventListener('click', function(e) {
-            if (e.target && (e.target.tagName === 'BUTTON' || e.target.classList.contains('btn-universal') || e.target.tagName === 'A')) {
-                const audio = document.getElementById('audio-tap');
-                if (audio) {
-                    audio.currentTime = 0;
-                    audio.play().catch(() => {});
-                }
-            }
-        });
+        // ==========================================
+        // ESTADO DE LA APLICACIÓN
+        // ==========================================
+        let currentUser = null;
+        let currentUserData = null;
+        let backgroundTime = null;
 
-        // ESCUCHA DEL FOCO DE VISIBILIDAD (Protección de datos)
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'hidden') {
-                tiempoSalidaSegundoPlano = Date.now();
-            } else if (document.visibilityState === 'visible') {
-                if (tiempoSalidaSegundoPlano) {
-                    const transcurrido = Date.now() - tiempoSalidaSegundoPlano;
-                    if (transcurrido > LIMITE_INACTIVIDAD_MS) {
-                        document.getElementById('pantalla-bloqueo').style.display = 'flex';
-                    }
-                    tiempoSalidaSegundoPlano = null;
-                }
-            }
-        });
+        // ==========================================
+        // SISTEMA DE NAVEGACIÓN SPA
+        // ==========================================
+        function navigateTo(screenId) {
+            playTap();
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            // Cargar datos específicos al entrar a pantallas
+            if(screenId === 'screen-sos') loadMedicalCards();
+            if(screenId === 'screen-admin') { loadTeachersList(); loadAdminStudentsList(); }
+        }
 
-        // CONTROL CONTROLADO DE ESTADO DE AUTENTICACIÓN (Arquitectura segura de Claude)
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                if (!user.email.endsWith('@g.educaand.es')) {
-                    alert("Acceso denegado. Es indispensable un correo oficial con dominio @g.educaand.es.");
-                    auth.signOut();
-                    return;
-                }
-                verificarAutorizacionYRangos(user);
-            } else {
-                irAPantalla('pantalla-login');
-            }
-        });
+        // ==========================================
+        // AUTENTICACIÓN CON GOOGLE (DOMINIO JUNTA)
+        // ==========================================
+        function loginWithGoogle() {
+            playTap();
+            const provider = new firebase.auth.GoogleAuthProvider();
+            // Forzar cuenta corporativa de la Junta de Andalucía
+            provider.setCustomParameters({ hd: 'g.educaand.es' });
+            
+            auth.signInWithPopup(provider)
+                .then(result => {
+                    // La validación de acceso se maneja en el observador onAuthStateChanged
+                })
+                .catch(error => {
+                    console.error("Error login:", error);
+                    alert("Error de autenticación. Asegúrate de usar tu cuenta de la Junta (@g.educaand.es).");
+                });
+        }
 
-        function iniciarSesionGoogle() {
+        function reauthenticateUser() {
+            playTap();
             const provider = new firebase.auth.GoogleAuthProvider();
             provider.setCustomParameters({ hd: 'g.educaand.es' });
-            auth.signInWithPopup(provider).catch(err => {
-                alert("Error en autenticación institucional: " + err.message);
-            });
-        }
-
-        function verificarAutorizacionYRangos(user) {
-            if (user.email === FUNDADOR_CORREO) {
-                cargarFlujoInternoApp(user, true);
-            } else {
-                db.collection("claustro").doc(user.email).get().then(doc => {
-                    if (doc.exists) {
-                        const datos = doc.data();
-                        cargarFlujoInternoApp(user, datos.isAdmin || false);
-                    } else {
-                        alert("Acceso denegado. No figura en el censo de docentes autorizados.");
-                        auth.signOut();
-                    }
-                }).catch(err => {
-                    alert("Error al conectar con Firestore: " + err.message);
-                    auth.signOut();
-                });
-            }
-        }
-
-        function cargarFlujoInternoApp(user, esAdministrador) {
-            document.getElementById('display-user-name').innerText = user.displayName || user.email;
             
-            if (esAdministrador || user.email === FUNDADOR_CORREO) {
-                document.getElementById('btn-tuerca').style.display = 'inline-block';
-                activarOyentesAdministracionRealTime();
-            } else {
-                document.getElementById('btn-tuerca').style.display = 'none';
-            }
-
-            // Registro silencioso de actividad (Pacto de confianza sin tracking individual invasivo)
-            if (user.email !== FUNDADOR_CORREO) {
-                db.collection("claustro").doc(user.email).set({
-                    email: user.email,
-                    ultimoIngresoVerificado: true
-                }, { merge: true });
-            }
-
-            conectarOyenteAlumnadoSOS();
-            document.getElementById('pantalla-bloqueo').style.display = 'none';
-            irAPantalla('pantalla-menu');
+            auth.currentUser.reauthenticateWithPopup(provider)
+                .then(() => {
+                    document.getElementById('lock-screen').classList.remove('active');
+                    backgroundTime = null;
+                })
+                .catch(error => {
+                    alert("No se ha podido verificar tu identidad. Intenta de nuevo.");
+                });
         }
 
-        function desbloquearPorBiometria() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            provider.setCustomParameters({ hd: 'g.educaand.es', prompt: 'select_account' });
-            auth.currentUser.reauthenticateWithPopup(provider).then(() => {
-                document.getElementById('pantalla-bloqueo').style.display = 'none';
-                tiempoSalidaSegundoPlano = null;
-            }).catch(err => {
-                alert("Re-verificación fallida: " + err.message);
-            });
-        }
-
-        function irAPantalla(idPantalla) {
-            const pantallas = document.getElementsByClassName('pantalla');
-            for (let i = 0; i < pantallas.length; i++) {
-                pantallas[i].style.display = 'none';
-            }
-            document.getElementById(idPantalla).style.display = 'block';
-        }
-
-        function abrirModuloUrgencia() {
-            document.getElementById('buscador').value = '';
-            filtrarAlumnosReactivo();
-            irAPantalla('pantalla-medica');
-        }
-
-        function ejecutarCerrarSesion() {
-            if (confirm("¿Seguro que desea cerrar sesión en este terminal?")) {
+        function logout() {
+            playTap();
+            if(confirm("¿Seguro que deseas cerrar sesión?")) {
                 auth.signOut();
             }
         }
 
-        function alternarModoVisual() {
-            document.body.classList.toggle('dark-mode');
+        // Observador de estado de autenticación
+        auth.onAuthStateChanged(async user => {
+            if (user) {
+                // Verificar si el correo es del dominio de la Junta
+                if (!user.email.endsWith('@g.educaand.es')) {
+                    alert("Acceso denegado: Debes usar tu cuenta corporativa de la Junta de Andalucía.");
+                    auth.signOut();
+                    return;
+                }
+
+                // Consultar en la base de datos de Madrid si está en el claustro
+                try {
+                    const teacherDoc = await db.collection('claustro').doc(user.email).get();
+                    
+                    if (teacherDoc.exists) {
+                        currentUser = user;
+                        currentUserData = teacherDoc.data();
+                        
+                        // Actualizar estado de actividad (Punto Verde)
+                        db.collection('claustro').doc(user.email).update({ haIniciadoSesion: true });
+
+                        // Configurar interfaz de Menú
+                        document.getElementById('user-name').innerText = user.displayName || user.email;
+                        
+                        // Visibilidad del botón de Admin (Tuerca ⚙️)
+                        const btnAdmin = document.getElementById('btn-admin-panel');
+                        if (user.email === 'mvensan855@g.educaand.es' || currentUserData.isAdmin === true) {
+                            btnAdmin.style.display = 'inline-block';
+                        } else {
+                            btnAdmin.style.display = 'none';
+                        }
+
+                        navigateTo('screen-menu');
+                        
+                        // Iniciar el control de segundo plano
+                        setupVisibilityListener();
+
+                        // Semilla de datos inicial (Solo si no hay alumnos en la BD para demostración)
+                        seedInitialDataIfEmpty();
+
+                    } else {
+                        alert("Acceso denegado: Tu correo no está autorizado en el claustro de este centro.");
+                        auth.signOut();
+                    }
+                } catch (error) {
+                    console.error("Error verificando claustro:", error);
+                    alert("Error de conexión con la base de datos segura. Revisa las reglas de Firestore.");
+                    auth.signOut();
+                }
+            } else {
+                currentUser = null;
+                currentUserData = null;
+                navigateTo('screen-login');
+            }
+        });
+
+        // ==========================================
+        // REGLA DE LOS 5 MINUTOS (Page Visibility API)
+        // ==========================================
+        function setupVisibilityListener() {
+            document.addEventListener('visibilitychange', () => {
+                if (!currentUser) return;
+                
+                if (document.hidden) {
+                    backgroundTime = Date.now();
+                } else {
+                    if (backgroundTime) {
+                        const diff = Date.now() - backgroundTime;
+                        // 300000 ms = 5 minutos exactos
+                        if (diff >= 300000) {
+                            document.getElementById('lock-screen').classList.add('active');
+                        }
+                        backgroundTime = null;
+                    }
+                }
+            });
+
+            // Respaldo con blur/focus para navegadores móviles
+            window.addEventListener('blur', () => { if(currentUser) backgroundTime = Date.now(); });
+            window.addEventListener('focus', () => {
+                if (!currentUser || !backgroundTime) return;
+                const diff = Date.now() - backgroundTime;
+                if (diff >= 300000) {
+                    document.getElementById('lock-screen').classList.add('active');
+                }
+                backgroundTime = null;
+            });
         }
 
-        // CONTROL EN TIEMPO REAL DE ALUMNOS (Inspirado en la renderización limpia de Gemini)
-        function conectarOyenteAlumnadoSOS() {
-            db.collection("alumnado").onSnapshot(snapshot => {
-                const contenedor = document.getElementById('lista-alumnos-sos');
-                contenedor.innerHTML = '';
+        // ==========================================
+        // MÓDULO MÉDICO S.O.S. (Pantalla 3)
+        // ==========================================
+        function loadMedicalCards() {
+            const container = document.getElementById('medical-cards-container');
+            container.innerHTML = '<p>Cargando protocolos desde Madrid...</p>';
+
+            // Oyente en tiempo real
+            db.collection('alumnado').onSnapshot(snapshot => {
+                container.innerHTML = '';
+                if(snapshot.empty) {
+                    container.innerHTML = '<p>No hay alumnos con protocolos médicos dados de alta actualmente.</p>';
+                    return;
+                }
                 
-                if (snapshot.empty) {
-                    contenedor.innerHTML = '<p style="font-size:13px; color:var(--texto-secundario); padding:20px;">No hay fichas registradas en el censo.</p>';
+                snapshot.forEach(doc => {
+                    const s = doc.data();
+                    const riskClass = s.nivelRiesgo === 'Critico' ? 'critico' : 'moderado';
+                    const badgeClass = s.nivelRiesgo === 'Critico' ? 'badge-critico' : 'badge-moderado';
+                    const badgeText = s.nivelRiesgo === 'Critico' ? '🔴 CRÍTICO' : '🟡 MODERADO';
+
+                    const card = `
+                        <div class="medical-card ${riskClass} medical-item">
+                            <div class="badge ${badgeClass}">${badgeText}</div>
+                            <div class="card-name">${s.nombre} ${s.apellidos}</div>
+                            <div class="card-course">${s.curso} | Tutor: ${s.tutor}</div>
+                            
+                            <div class="condition-box">
+                                <div class="condition-title">Condición / Patología:</div>
+                                <div class="condition-text">${s.patologia}</div>
+                            </div>
+                            
+                            <div class="protocol-box">
+                                <div class="protocol-title">PROTOCOLO DE ACTUACIÓN PASO A PASO</div>
+                                <div class="protocol-text">${s.protocolo}</div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
+            }, error => {
+                console.error("Error obteniendo alumnado:", error);
+                container.innerHTML = '<p>Error al cargar datos médicos.</p>';
+            });
+        }
+
+        function filterMedicalCards() {
+            const term = document.getElementById('search-sos').value.toLowerCase();
+            const cards = document.querySelectorAll('.medical-item');
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(term) ? 'block' : 'none';
+            });
+        }
+
+        // ==========================================
+        // MODO OSCURO
+        // ==========================================
+        function toggleDarkMode() {
+            playTap();
+            document.body.classList.toggle('dark-mode');
+            // Guardar preferencia
+            if(document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                localStorage.setItem('darkMode', 'false');
+            }
+        }
+
+        // Aplicar preferencia guardada al cargar
+        if(localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // ==========================================
+        // PANEL DE JEFATURA - GESTIÓN CLAUSTRO
+        // ==========================================
+        function loadTeachersList() {
+            const container = document.getElementById('teacher-list-container');
+            container.innerHTML = '<p>Cargando personal...</p>';
+
+            db.collection('claustro').onSnapshot(snapshot => {
+                container.innerHTML = '';
+                if(snapshot.empty) {
+                    container.innerHTML = '<div class="list-item"><span>No hay personal autorizado.</span></div>';
                     return;
                 }
 
                 snapshot.forEach(doc => {
-                    const al = doc.data();
-                    const claseRiesgo = (al.nivelRiesgo === 'Crítico') ? '' : 'moderado';
-                    const badgeColor = (al.nivelRiesgo === 'Crítico') ? 'critico' : 'moderado';
-                    const prefijo = (al.nivelRiesgo === 'Crítico') ? '🔴' : '🟡';
-
-                    contenedor.innerHTML += `
-                        <div class="tarjeta-alumno ${claseRiesgo}">
-                            <div class="alumno-nombre">
-                                ${al.nombre} ${al.apellidos} 
-                                <span class="badge ${badgeColor}">${prefijo} ${al.nivelRiesgo}</span>
-                            </div>
-                            <div class="alumno-curso">Curso: ${al.curso} | Tutor/a: ${al.tutor}</div>
-                            <div class="alumno-patologia"><strong>Condición:</strong> ${al.patologia}</div>
-                            <div class="alumno-protocolo">
-                                <div class="protocolo-titulo">Protocolo Inmediato:</div>
-                                ${al.protocolo.replace(/\n/g, '<br>')}
-                            </div>
-                        </div>
-                    `;
-                });
-            }, err => {
-                console.error("Error en escucha sincrónica: ", err);
-            });
-        }
-
-        // BUSCADOR REACTIVO ULTRA-FULMINANTE (Inspirado en Kimi)
-        function filtrarAlumnosReactivo() {
-            const query = document.getElementById('buscador').value.toLowerCase();
-            const tarjetas = document.getElementById('lista-alumnos-sos').getElementsByClassName('tarjeta-alumno');
-            
-            for (let i = 0; i < tarjetas.length; i++) {
-                const texto = tarjetas[i].innerText.toLowerCase();
-                tarjetas[i].style.display = texto.includes(query) ? "block" : "none";
-            }
-        }
-
-        // OYENTES DE ADMINISTRACIÓN EN TIEMPO REAL
-        function activarOyentesAdministracionRealTime() {
-            db.collection("claustro").onSnapshot(snapshot => {
-                const box = document.getElementById('box-lista-maestros');
-                box.innerHTML = `
-                    <div class="fila-item" style="border-color: var(--azul-institucional); background: var(--bg-tarjeta);">
-                        <span><span class="status-dot activo"></span><b>${FUNDADOR_CORREO}</b> (⭐ Propietario)</span>
-                        <span style="font-size:10px; font-weight:bold; color:var(--azul-institucional);">FUNDADOR</span>
-                    </div>
-                `;
-
-                snapshot.forEach(doc => {
-                    const m = doc.data();
-                    if (m.email === FUNDADOR_CORREO) return;
-
-                    const dot = m.ultimoIngresoVerificado ? 'activo' : 'inactivo';
-                    const rango = m.isAdmin ? '⭐ Admin' : 'Docente';
+                    const t = doc.data();
+                    const email = doc.id;
+                    const roleText = t.isAdmin ? '⭐ Admin' : 'Docente';
+                    const dotClass = t.haIniciadoSesion ? 'dot-green' : 'dot-gray';
                     
-                    box.innerHTML += `
-                        <div class="fila-item">
-                            <span><span class="status-dot ${dot}"></span><b>${m.email}</b> (${rango})</span>
-                            <div>
-                                <button class="btn-tabla rol" onclick="conmutarRangoMaestro('${m.email}', ${m.isAdmin || false})">Rol</button>
-                                <button class="btn-tabla baja" onclick="eliminarAccesoMaestro('${m.email}')">Baja</button>
+                    // No mostrar botones de acción sobre uno mismo (Escudo Anti-Expulsión visual)
+                    const isSelf = currentUser && currentUser.email === email;
+                    const actionsHTML = isSelf ? `<span style="font-size:0.8rem; color:#94a3b8;">Sesión Activa</span>` : `
+                        <button class="btn btn-small btn-secondary" onclick="toggleAdmin('${email}', ${t.isAdmin})">Rol</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteTeacher('${email}')">Baja</button>
+                    `;
+
+                    const row = `
+                        <div class="list-item">
+                            <div class="list-item-info">
+                                <div class="list-email"><span class="status-dot ${dotClass}"></span> ${email}</div>
+                                <div class="list-role">(${roleText})</div>
+                            </div>
+                            <div class="list-actions">
+                                ${actionsHTML}
                             </div>
                         </div>
                     `;
-                });
-            });
-
-            db.collection("alumnado").onSnapshot(snapshot => {
-                const box = document.getElementById('box-lista-alumnos-admin');
-                box.innerHTML = '';
-
-                snapshot.forEach(doc => {
-                    const al = doc.data();
-                    const id = doc.id;
-                    const indicador = (al.nivelRiesgo === 'Crítico') ? '🔴' : '🟡';
-
-                    box.innerHTML += `
-                        <div class="fila-item">
-                            <span>${indicador} <b>${al.nombre} ${al.apellidos}</b> (${al.curso})</span>
-                            <div>
-                                <button class="btn-tabla edit" onclick="cargarAlumnoEnFormulario('${id}', ${JSON.stringify(al).replace(/"/g, '&quot;')})">Editar</button>
-                                <button class="btn-tabla baja" onclick="eliminarFichaAlumno('${id}', '${al.nombre}')">Borrar</button>
-                            </div>
-                        </div>
-                    `;
+                    container.innerHTML += row;
                 });
             });
         }
 
-        function registrarMaestroManual() {
-            const email = document.getElementById('inp-maestro-email').value.trim().toLowerCase();
-            if (!email.endsWith('@g.educaand.es')) {
-                alert("El correo debe pertenecer al dominio corporativo @g.educaand.es");
-                return;
-            }
-            db.collection("claustro").doc(email).set({
-                email: email,
-                isAdmin: false,
-                ultimoIngresoVerificado: false
-            }).then(() => {
-                document.getElementById('inp-maestro-email').value = '';
-            }).catch(err => alert("Error: " + err.message));
-        }
+        async function addTeacher() {
+            playTap();
+            const emailInput = document.getElementById('input-teacher-email');
+            const email = emailInput.value.trim();
 
-        function conmutarRangoMaestro(email, esAdminActual) {
-            db.collection("claustro").doc(email).update({ isAdmin: !esAdminActual });
-        }
-
-        // PROTECCIÓN ANTI-AUTOEXPULSIÓN (Lógica blindada de Claude/Manuel)
-        function eliminarAccesoMaestro(email) {
-            if (email === auth.currentUser.email) {
-                alert("🔒 Escudo de seguridad: No puedes revocar tu propio acceso administrativo para evitar la orfandad del sistema.");
-                return;
-            }
-            if (confirm(`¿Seguro que desea revocar el acceso al docente: ${email}?`)) {
-                db.collection("claustro").doc(email).delete();
-            }
-        }
-
-        // GUARDADO Y CRUD EN CALIENTE DE ALUMNOS (Lógica unificada de Gemini)
-        function guardarFichaAlumnoIndividual() {
-            const id = document.getElementById('form-alumno-id').value;
-            const payload = {
-                nombre: document.getElementById('form-alumno-nombre').value.trim(),
-                apellidos: document.getElementById('form-alumno-apellidos').value.trim(),
-                curso: document.getElementById('form-alumno-curso').value,
-                tutor: document.getElementById('form-alumno-tutor').value.trim(),
-                patologia: document.getElementById('form-alumno-patologia').value.trim(),
-                protocolo: document.getElementById('form-alumno-protocolo').value.trim(),
-                nivelRiesgo: document.getElementById('form-alumno-riesgo').value
-            };
-
-            if (!payload.nombre || !payload.apellidos || !payload.tutor || !payload.patologia || !payload.protocolo) {
-                alert("Todos los campos de la ficha médica son de carácter obligatorio.");
+            if(!email || !email.endsWith('@g.educaand.es')) {
+                alert("El correo debe ser institucional y terminar en @g.educaand.es");
                 return;
             }
 
-            if (id) {
-                db.collection("alumnado").doc(id).update(payload).then(() => limpiarFormularioAlumnado());
-            } else {
-                db.collection("alumnado").add(payload).then(() => limpiarFormularioAlumnado());
+            try {
+                await db.collection('claustro').doc(email).set({
+                    email: email,
+                    isAdmin: false,
+                    haIniciadoSesion: false
+                });
+                emailInput.value = '';
+                alert("Docente dado de alta con éxito.");
+            } catch (error) {
+                alert("Error al dar de alta: " + error.message);
             }
         }
 
-        function cargarAlumnoEnFormulario(id, datos) {
-            document.getElementById('formulario-alumno-titulo').innerText = "✏️ Editando Ficha de " + datos.nombre;
-            document.getElementById('form-alumno-id').value = id;
-            document.getElementById('form-alumno-nombre').value = datos.nombre;
-            document.getElementById('form-alumno-apellidos').value = datos.apellidos;
-            document.getElementById('form-alumno-curso').value = datos.curso;
-            document.getElementById('form-alumno-tutor').value = datos.tutor;
-            document.getElementById('form-alumno-patologia').value = datos.patologia;
-            document.getElementById('form-alumno-protocolo').value = datos.protocolo;
-            document.getElementById('form-alumno-riesgo').value = datos.nivelRiesgo;
-            document.getElementById('btn-cancelar-edicion').style.display = 'inline-block';
-        }
-
-        function eliminarFichaAlumno(id, nombre) {
-            if (confirm(`¿Eliminar permanentemente del censo la ficha médica de ${nombre}?`)) {
-                db.collection("alumnado").doc(id).delete();
+        async function toggleAdmin(email, currentStatus) {
+            playTap();
+            try {
+                await db.collection('claustro').doc(email).update({
+                    isAdmin: !currentStatus
+                });
+            } catch (error) {
+                alert("Error al cambiar rol: " + error.message);
             }
         }
 
-        function limpiarFormularioAlumnado() {
-            document.getElementById('formulario-alumno-titulo').innerText = "Añadir / Editar Ficha Quirúrgica:";
-            document.getElementById('form-alumno-id').value = '';
-            document.getElementById('form-alumno-nombre').value = '';
-            document.getElementById('form-alumno-apellidos').value = '';
-            document.getElementById('form-alumno-tutor').value = '';
-            document.getElementById('form-alumno-patologia').value = '';
-            document.getElementById('form-alumno-protocolo').value = '';
-            document.getElementById('btn-cancelar-edicion').style.display = 'none';
-        }
+        async function deleteTeacher(email) {
+            playTap();
+            // Escudo Anti-Autoexpulsión
+            if(currentUser && currentUser.email === email) {
+                alert("Protección anti-errores: No puedes darte de baja a ti mismo. Debe hacerlo otro miembro del equipo directivo.");
+                return;
+            }
 
-        // SEEDING INTELIGENTE DE ALUMNOS DE PRUEBA (Inspirado en GLM y Claude)
-        async function inyectarDatosDemoOpcionales() {
-            if (confirm("¿Deseas inyectar automáticamente las fichas médicas de prueba (Alejandro, Martín y Lucía) en Firestore?")) {
+            if(confirm("¿Está completamente seguro de expulsar y revocar el acceso permanente a este usuario?")) {
                 try {
-                    const batch = db.batch();
-                    const demoData = [
-                        {
-                            nombre: "Alejandro", apellidos: "Gómez", curso: "3º de Primaria", tutor: "Manuel",
-                            nivelRiesgo: "Crítico", patologia: "Alergía extrema a los frutos secos (Cacahuete) con riesgo de Anafilaxia.",
-                            protocolo: "1. En caso de ingesta o urticaria, inyectar Altellus (Adrenalina) en el muslo inmediatamente.\n2. Llamar al 112 y a la dirección del centro."
-                        },
-                        {
-                            nombre: "Martín", apellidos: "Ruiz", curso: "1º de Primaria", tutor: "María",
-                            nivelRiesgo: "Crítico", patologia: "Diabetes Tipo 1 (Riesgo grave de Hipoglucemia).",
-                            protocolo: "1. Ante mareo o sudoración fría, administrar un zumo o glucosa líquida inmediata.\n2. Si se desmaya, NO dar comida. Aplicar Glucagón y activar protocolo 112."
-                        },
-                        {
-                            nombre: "Lucía", apellidos: "Fernández", curso: "5º de Primaria", tutor: "Antonio",
-                            nivelRiesgo: "Moderado", patologia: "Asma crónica inducida por esfuerzo físico.",
-                            protocolo: "1. Ante crisis asmática, sentar en espacio ventilado.\n2. Administrar 2 dosis de Ventolín (localizado en su mochila).\n3. Si tras 5 minutos no estabiliza, avisar a la familia."
-                        }
-                    ];
-
-                    demoData.forEach(alumno => {
-                        const newDocRef = db.collection("alumnado").doc();
-                        batch.set(newDocRef, alumno);
-                    });
-
-                    await batch.commit();
-                    alert("Fichas inyectadas con éxito. Ya puedes visualizarlas en el módulo de emergencias.");
+                    await db.collection('claustro').doc(email).delete();
                 } catch (error) {
-                    alert("Error en la inyección de datos: " + error.message);
+                    alert("Error al expulsar al docente: " + error.message);
                 }
             }
         }
+
+        // ==========================================
+        // PANEL DE JEFATURA - GESTIÓN ALUMNADO (CRUD)
+        // ==========================================
+        let isEditingStudent = false;
+
+        function loadAdminStudentsList() {
+            const container = document.getElementById('admin-students-container');
+            container.innerHTML = '';
+
+            db.collection('alumnado').onSnapshot(snapshot => {
+                container.innerHTML = '';
+                if(snapshot.empty) {
+                    container.innerHTML = '<p>No hay alumnos registrados.</p>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const s = doc.data();
+                    const riskClass = s.nivelRiesgo === 'Critico' ? 'critico' : 'moderado';
+                    const badgeClass = s.nivelRiesgo === 'Critico' ? 'badge-critico' : 'badge-moderado';
+                    const badgeText = s.nivelRiesgo === 'Critico' ? '🔴 CRÍTICO' : '🟡 MODERADO';
+
+                    const card = `
+                        <div class="medical-card ${riskClass}">
+                            <div class="badge ${badgeClass}">${badgeText}</div>
+                            <div class="card-name">${s.nombre} ${s.apellidos}</div>
+                            <div class="card-course">${s.curso} | Tutor: ${s.tutor}</div>
+                            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                                <button class="btn btn-small btn-secondary" onclick="editStudent('${doc.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Editar</button>
+                                <button class="btn btn-small btn-danger" onclick="deleteStudent('${doc.id}', '${s.nombre} ${s.apellidos}')">Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
+            });
+        }
+
+        async function saveStudent(event) {
+            event.preventDefault();
+            playTap();
+
+            const id = document.getElementById('student-id').value;
+            const studentData = {
+                nombre: document.getElementById('student-nombre').value,
+                apellidos: document.getElementById('student-apellidos').value,
+                curso: document.getElementById('student-curso').value,
+                riesgo: document.getElementById('student-riesgo').value,
+                nivelRiesgo: document.getElementById('student-riesgo').value, // Campo de texto legible
+                tutor: document.getElementById('student-tutor').value,
+                patologia: document.getElementById('student-patologia').value,
+                protocolo: document.getElementById('student-protocolo').value
+            };
+
+            try {
+                if(isEditingStudent && id) {
+                    // Modo Edición
+                    await db.collection('alumnado').doc(id).update(studentData);
+                    alert("Alumno actualizado correctamente en la base de datos.");
+                } else {
+                    // Modo Alta
+                    await db.collection('alumnado').add(studentData);
+                    alert("Alumno insertado correctamente en la base de datos.");
+                }
+                document.getElementById('student-form').reset();
+                cancelEditStudent(); // Resetear estado de edición
+            } catch (error) {
+                alert("Error al guardar alumno: " + error.message);
+            }
+        }
+
+        function editStudent(id, studentData) {
+            playTap();
+            isEditingStudent = true;
+            document.getElementById('student-id').value = id;
+            document.getElementById('student-nombre').value = studentData.nombre;
+            document.getElementById('student-apellidos').value = studentData.apellidos;
+            document.getElementById('student-curso').value = studentData.curso;
+            document.getElementById('student-riesgo').value = studentData.nivelRiesgo;
+            document.getElementById('student-tutor').value = studentData.tutor;
+            document.getElementById('student-patologia').value = studentData.patologia;
+            document.getElementById('student-protocolo').value = studentData.protocolo;
+
+            document.getElementById('btn-save-student').innerText = 'Actualizar Alumno';
+            document.getElementById('btn-cancel-edit').style.display = 'inline-block';
+            
+            // Scroll al formulario
+            document.getElementById('student-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEditStudent() {
+            isEditingStudent = false;
+            document.getElementById('student-id').value = '';
+            document.getElementById('student-form').reset();
+            document.getElementById('btn-save-student').innerText = 'Guardar Alumno';
+            document.getElementById('btn-cancel-edit').style.display = 'none';
+        }
+
+        async function deleteStudent(id, fullName) {
+            playTap();
+            if(confirm(`¿Estás seguro de eliminar a ${fullName} del censo médico? Esta acción es irreversible.`)) {
+                try {
+                    await db.collection('alumnado').doc(id).delete();
+                } catch (error) {
+                    alert("Error al eliminar al alumno: " + error.message);
+                }
+            }
+        }
+
+        // ==========================================
+        // SEMILLA INICIAL DE DATOS (Ejemplos Reales)
+        // ==========================================
+        async function seedInitialDataIfEmpty() {
+            try {
+                const snapshot = await db.collection('alumnado').limit(1).get();
+                if(snapshot.empty) {
+                    console.log("Inyectando datos de ejemplo iniciales en Firestore...");
+                    const batch = db.batch();
+                    
+                    const alejandroRef = db.collection('alumnado').doc();
+                    batch.set(alejandroRef, {
+                        nombre: "Alejandro",
+                        apellidos: "Gómez",
+                        curso: "3º de Primaria",
+                        tutor: "Manuel",
+                        nivelRiesgo: "Critico",
+                        patologia: "Alergia severa a los frutos secos (Anafilaxia).",
+                        protocolo: "1. En caso de ingesta o ronchas, coger maletín médico de tutoría.\n2. Inyectar Epipen (Adrenalina) en el muslo sobre la ropa.\n3. Llamar inmediatamente al 112 y avisar a Dirección."
+                    });
+
+                    const martinRef = db.collection('alumnado').doc();
+                    batch.set(martinRef, {
+                        nombre: "Martín",
+                        apellidos: "Ruiz",
+                        curso: "1º de Primaria",
+                        tutor: "María",
+                        nivelRiesgo: "Critico",
+                        patologia: "Diabetes Tipo 1 (Riesgo de Hipoglucemia).",
+                        protocolo: "1. Si presenta mareo, sudoración o confusión, darle un zumo o sobre de azúcar líquido al instante.\n2. Medir glucemia con el sensor de su brazo si está inconsciente.\n3. Si desmaya, NO dar comida; aplicar Glucagón e iniciar protocolo 112."
+                    });
+
+                    const luciaRef = db.collection('alumnado').doc();
+                    batch.set(luciaRef, {
+                        nombre: "Lucía",
+                        apellidos: "Fernández",
+                        curso: "5º de Primaria",
+                        tutor: "Antonio",
+                        nivelRiesgo: "Moderado",
+                        patologia: "Asma crónica inducida por ejercicio.",
+                        protocolo: "1. Ante crisis de ahogo, sentar al alumno en un lugar ventilado.\n2. Administrar 2 dosis de Ventolín (está en su mochila).\n3. Si no mejora en 5 minutos, avisar a la familia."
+                    });
+
+                    await batch.commit();
+                }
+            } catch (error) {
+                console.error("Error verificando/inyectando datos iniciales:", error);
+            }
+        }
+
     </script>
 </body>
 </html>
