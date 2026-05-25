@@ -1,9 +1,10 @@
 const CACHE_NAME = 'siurot-cache-v1';
 const URLS_TO_CACHE = [
     './',
+    './index.html',
     './manifest.json',
-    './icono-192.png',
-    './icono-512.png'
+    './icon-192.png',
+    './icon-512.png'
 ];
 
 // Instalación: cachear archivos básicos
@@ -33,16 +34,12 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         fetch(event.request)
             .then(response => {
-                // Si la red funciona, guardamos una copia en caché
                 const responseClone = response.clone();
                 caches.open(CACHE_NAME).then(cache => {
                     cache.put(event.request, responseClone);
                 });
                 return response;
             })
-            .catch(() => {
-                // Si no hay red, servimos desde la caché
-                return caches.match(event.request);
-            })
+            .catch(() => caches.match(event.request))
     );
 });
