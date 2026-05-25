@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Siurot Gestión Alumnado</title>
-    <link rel="icon" href="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/AppAlumnado.png" type="image/png">
+    <link rel="icon" href="https://raw.githubusercontent.com/ManuelVS8/Audios-juegos-SCIENCE/refs/heads/main/AppAlumnado1.png" type="image/png">
     <style>
         :root {
             --bg-main:#f4f6f9;--bg-card:#ffffff;--text-main:#1e293b;--text-muted:#64748b;
@@ -50,7 +50,8 @@
         .login-subtitle{font-size:1.1rem;color:var(--text-muted);margin-bottom:30px;max-width:400px;transition:opacity .3s;}
         .login-actions{display:flex;flex-direction:column;align-items:center;gap:12px;transition:opacity .3s;}
         .btn-google-login{background-color:var(--blue-corp);color:white;padding:15px 30px;border-radius:12px;border:none;font-size:1.1rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:10px;}
-        .btn-install-login{background:linear-gradient(135deg,var(--grad-green-start),var(--grad-green-end));color:white;padding:13px 28px;border-radius:12px;border:none;font-size:1rem;font-weight:600;cursor:pointer;display:none;align-items:center;gap:10px;}
+        /* MODIFICADO: display:none -> display:inline-flex para que sea visible por defecto */
+        .btn-install-login{background:linear-gradient(135deg,var(--grad-green-start),var(--grad-green-end));color:white;padding:13px 28px;border-radius:12px;border:none;font-size:1rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:10px;}
         .fading-out .login-subtitle,.fading-out .login-actions{opacity:0;pointer-events:none;}
 
         /* ── HEADER ── */
@@ -72,6 +73,8 @@
         .menu-btn-primary{background:linear-gradient(135deg,var(--grad-blue-start),var(--grad-blue-end));color:white;}
         .menu-btn-danger{background:linear-gradient(135deg,var(--grad-red-start),var(--grad-red-end));color:white;}
         .menu-btn-green{background:linear-gradient(135deg,var(--grad-green-start),var(--grad-green-end));color:white;}
+        /* MODIFICADO: display:none -> display:flex para que sea visible por defecto */
+        #btn-install-menu{background:linear-gradient(135deg,var(--grad-green-start),var(--grad-green-end));color:white;padding:12px;border-radius:8px;border:none;font-size:1rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;width:100%;}
         #menu-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:140;display:none;}
 
         /* ── INSTALL MODAL ── */
@@ -239,7 +242,7 @@
     </div>
     <div class="menu-section">
         <div class="menu-title">Aplicación</div>
-        <button class="menu-btn menu-btn-green" id="btn-install-menu" style="display:none;" onclick="openInstallModal();closeMenu();">📲 Instalar App</button>
+        <button id="btn-install-menu" onclick="openInstallModal();closeMenu();">📲 Instalar App</button>
         <button class="menu-btn menu-btn-danger" onclick="logout()">Cerrar Sesión</button>
     </div>
 </div>
@@ -703,8 +706,8 @@ function setupVisibilityListener(){
 window.addEventListener('beforeinstallprompt',e=>{
     e.preventDefault();
     deferredPrompt=e;
-    showInstallButtons();
 });
+
 window.addEventListener('appinstalled',()=>{
     deferredPrompt=null;
     hideInstallButtons();
@@ -714,17 +717,11 @@ window.addEventListener('appinstalled',()=>{
 
 function setupInstallUI(){
     const isStandalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
-    if(isStandalone){hideInstallButtons();return;}
-    const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isSafari=/safari/i.test(navigator.userAgent)&&!/chrome/i.test(navigator.userAgent);
-    // iOS Safari nunca lanza beforeinstallprompt → mostrar botón igualmente
-    if(isIOS&&isSafari) showInstallButtons();
-    // Chrome/Edge/Android: el evento beforeinstallprompt lo mostrará
+    if(isStandalone){
+        hideInstallButtons();
+    }
 }
-function showInstallButtons(){
-    document.getElementById('btn-install-menu').style.display='flex';
-    document.getElementById('btn-install-login').style.display='inline-flex';
-}
+
 function hideInstallButtons(){
     document.getElementById('btn-install-menu').style.display='none';
     document.getElementById('btn-install-login').style.display='none';
@@ -1248,13 +1245,22 @@ function editCurrentStudent(){
 }
 
 /* ─── UTILS ──────────────────────────────────────────────── */
+// CORREGIDO: Añadida la flecha => en la función map
 function formatPhones(tlf1,tlf2){
-    return[tlf1,tlf2].filter(Boolean).map(p=`<a href="tel:${p}" class="phone-link">${p}</a>`).join(' / ');
+    return [tlf1,tlf2].filter(Boolean).map(p => `<a href="tel:${p}" class="phone-link">${p}</a>`).join(' / ');
 }
 
 /* ─── INIT ───────────────────────────────────────────────── */
 document.getElementById('screen-login').style.display='flex';
 setupInstallUI();
+// REGISTRO DEL SERVICE WORKER
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registrado:', reg.scope))
+            .catch(err => console.error('Error registrando SW:', err));
+    });
+}
 </script>
 </body>
 </html>
